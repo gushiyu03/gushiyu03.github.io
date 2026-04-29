@@ -1,11 +1,583 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>我的第三个GitHub Pages网站</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026年日历</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+      padding: 12px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .year-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .year-nav button {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    .year-nav button:hover {
+      background: #e0e0e0;
+    }
+
+    .year-nav h1 {
+      font-size: 22px;
+      font-weight: 600;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    .month-container {
+      background: white;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .month-header {
+      padding: 10px 14px;
+      background: #ff6b6b;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .weekday-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #fafafa;
+    }
+
+    .weekday-header div {
+      padding: 6px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+    }
+
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: #f0f0f0;
+    }
+
+    .day {
+      background: white;
+      padding: 4px;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .day.empty {
+      background: #fafafa;
+    }
+
+    .day-number {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .day.today .day-number {
+      background: #ff6b6b;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .day.holiday .day-number {
+      color: #ff6b6b;
+    }
+
+    .day.workday .day-number {
+      color: #1890ff;
+    }
+
+    .day-label {
+      font-size: 9px;
+      margin-top: 2px;
+      color: #999;
+    }
+
+    .day.holiday .day-label {
+      color: #ff6b6b;
+    }
+
+    .day.workday .day-label {
+      color: #1890ff;
+    }
+
+    .day-arrange {
+      font-size: 8px;
+      color: #999;
+      margin-top: 1px;
+    }
+
+    .day.holiday .day-arrange {
+      color: #ffb3b3;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* 倒计时面板 */
+    .countdown-panel {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 14px 16px;
+      min-width: 240px;
+      max-height: 350px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+
+    .countdown-title {
+      font-size: 11px;
+      color: #999;
+    }
+
+    .countdown-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #f0f0f0;
+      padding-bottom: 6px;
+    }
+
+    .countdown-minimize {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: #f0f0f0;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      color: #666;
+    }
+
+    .countdown-minimize:hover {
+      background: #e0e0e0;
+    }
+
+    .countdown-list-hidden {
+      display: none;
+    }
+
+    .countdown-panel.minimized {
+      padding: 10px 16px;
+    }
+
+    .countdown-item {
+      margin-bottom: 10px;
+    }
+
+    .countdown-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .countdown-holiday {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .countdown-time {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ff6b6b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .countdown-time span {
+      font-size: 11px;
+      font-weight: 500;
+      color: #666;
+      margin-left: 2px;
+    }
+
+    .countdown-date {
+      font-size: 10px;
+      color: #999;
+      margin-top: 2px;
+    }
+
+    .countdown-passed {
+      color: #999;
+      font-size: 11px;
+    }
+
+    .countdown-passed .countdown-time {
+      color: #999;
+      font-size: 13px;
+    }
+
+    /* 移动端适配 */
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+
+      .header {
+        padding: 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+
+      .year-nav {
+        justify-content: center;
+      }
+
+      .year-nav h1 {
+        font-size: 20px;
+      }
+
+      .month-container {
+        margin-bottom: 12px;
+      }
+
+      .month-header {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+
+      .weekday-header div {
+        padding: 4px;
+        font-size: 10px;
+      }
+
+      .day {
+        padding: 3px;
+        min-height: 40px;
+      }
+
+      .day-number {
+        font-size: 11px;
+      }
+
+      .day.today .day-number {
+        width: 18px;
+        height: 18px;
+        font-size: 10px;
+      }
+
+      .day-label {
+        font-size: 8px;
+      }
+
+      .day-arrange {
+        font-size: 7px;
+      }
+
+      .countdown-panel {
+        bottom: 8px;
+        right: 8px;
+        left: 8px;
+        min-width: unset;
+        max-height: 300px;
+        padding: 12px 14px;
+      }
+
+      .countdown-time {
+        font-size: 16px;
+      }
+
+      .countdown-holiday {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .day {
+        min-height: 35px;
+        padding: 2px;
+      }
+
+      .day-number {
+        font-size: 10px;
+      }
+
+      .day-label,
+      .day-arrange {
+        font-size: 7px;
+      }
+
+      .weekday-header div {
+        font-size: 9px;
+        padding: 3px;
+      }
+    }
+  </style>
 </head>
 <body>
-<h1>恭喜！网站部署成功啦！</h1>
-<p>用GitHub Pages搭网站真的超简单～</p>
+  <div class="container">
+    <div class="header">
+      <div class="year-nav">
+        <h1 id="yearTitle">2026年</h1>
+      </div>
+    </div>
+
+    <div id="calendar"></div>
+  </div>
+
+  <div class="countdown-panel" id="countdownPanel">
+    <div class="countdown-header">
+      <div class="countdown-title">节假日倒计时</div>
+      <button class="countdown-minimize" onclick="toggleCountdown()">−</button>
+    </div>
+    <div id="countdownList"></div>
+  </div>
+
+  <script>
+    // 2026年中国法定节假日（含放假安排）
+    const holidays = [
+      { name: '元旦', start: '2026-01-01', end: '2026-01-03', arrange: '放假3天' },
+      { name: '春节', start: '2026-02-15', end: '2026-02-23', arrange: '放假9天' },
+      { name: '清明节', start: '2026-04-04', end: '2026-04-06', arrange: '放假3天' },
+      { name: '劳动节', start: '2026-05-01', end: '2026-05-05', arrange: '放假5天' },
+      { name: '端午节', start: '2026-06-19', end: '2026-06-21', arrange: '放假3天' },
+      { name: '中秋节', start: '2026-09-25', end: '2026-09-27', arrange: '放假3天' },
+      { name: '国庆节', start: '2026-10-01', end: '2026-10-07', arrange: '放假7天' }
+    ];
+
+    // 调休工作日
+    const workdays = [
+      '2026-01-04', // 元旦：1月4日（周日）上班
+      '2026-02-14', // 春节：2月14日（周六）上班
+      '2026-02-28', // 春节：2月28日（周六）上班
+      '2026-05-09', // 劳动节：5月9日（周六）上班
+      '2026-09-20', // 国庆节：9月20日（周日）上班
+      '2026-10-10'  // 国庆节：10月10日（周六）上班
+    ];
+
+    const monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    const weekdayNames = ['日', '一', '二', '三', '四', '五', '六'];
+
+    let currentYear = 2026;
+
+    function isHoliday(dateStr) {
+      for (const h of holidays) {
+        if (dateStr >= h.start && dateStr <= h.end) return { holiday: true, name: h.name };
+      }
+      return { holiday: false, name: '' };
+    }
+
+    function isWorkday(dateStr) {
+      return workdays.includes(dateStr);
+    }
+
+    function getHolidayArrange(dateStr) {
+      for (const h of holidays) {
+        if (dateStr >= h.start && dateStr <= h.end) return h.arrange;
+      }
+      return '';
+    }
+
+    function formatDate(year, month, day) {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+
+    function renderCalendar() {
+      const container = document.getElementById('calendar');
+      container.innerHTML = '';
+
+      for (let month = 0; month < 12; month++) {
+        const monthContainer = document.createElement('div');
+        monthContainer.className = 'month-container';
+        monthContainer.dataset.month = month;
+
+        // 月份标题
+        const monthHeader = document.createElement('div');
+        monthHeader.className = 'month-header';
+        monthHeader.textContent = monthNames[month];
+        monthContainer.appendChild(monthHeader);
+
+        // 星期标题
+        const weekdayHeader = document.createElement('div');
+        weekdayHeader.className = 'weekday-header';
+        for (let w = 0; w < 7; w++) {
+          const wd = document.createElement('div');
+          wd.textContent = weekdayNames[w];
+          weekdayHeader.appendChild(wd);
+        }
+        monthContainer.appendChild(weekdayHeader);
+
+        // 日期网格
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'days-grid';
+
+        const firstDay = new Date(currentYear, month, 1).getDay();
+        const daysInMonth = new Date(currentYear, month + 1, 0).getDate();
+
+        // 空格子
+        for (let i = 0; i < firstDay; i++) {
+          const empty = document.createElement('div');
+          empty.className = 'day empty';
+          daysGrid.appendChild(empty);
+        }
+
+        // 日期
+        const today = new Date();
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayEl = document.createElement('div');
+          dayEl.className = 'day';
+
+          const dateStr = formatDate(currentYear, month, day);
+          const { holiday, name: holidayName } = isHoliday(dateStr);
+          const workday = isWorkday(dateStr);
+
+          // 今天是高亮
+          if (currentYear === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+            dayEl.classList.add('today');
+          }
+
+          if (holiday) {
+            dayEl.classList.add('holiday');
+            const arrange = getHolidayArrange(dateStr);
+            dayEl.innerHTML = `
+              <span class="day-number">${day}</span>
+              <span class="day-label">${holidayName}</span>
+              ${arrange ? `<span class="day-arrange">${arrange}</span>` : ''}
+            `;
+          } else if (workday) {
+            dayEl.classList.add('workday');
+            dayEl.innerHTML = `
+              <span class="day-number">${day}</span>
+              <span class="day-label">上班</span>
+            `;
+          } else {
+            dayEl.innerHTML = `<span class="day-number">${day}</span>`;
+          }
+
+          daysGrid.appendChild(dayEl);
+        }
+
+        monthContainer.appendChild(daysGrid);
+        container.appendChild(monthContainer);
+      }
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const list = document.getElementById('countdownList');
+      list.innerHTML = '';
+
+      const holidayList = [];
+
+      for (const h of holidays) {
+        const holidayDate = new Date(h.start + 'T00:00:00');
+        const diff = holidayDate - now;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        holidayList.push({
+          name: h.name,
+          date: h.start + ' 至 ' + h.end,
+          arrange: h.arrange,
+          diff,
+          days,
+          hours,
+          minutes,
+          seconds,
+          passed: diff < 0
+        });
+      }
+
+      // Sort: upcoming first, then passed
+      holidayList.sort((a, b) => a.diff - b.diff);
+
+      holidayList.forEach(h => {
+        const item = document.createElement('div');
+        item.className = h.passed ? 'countdown-item countdown-passed' : 'countdown-item';
+
+        const timeStr = h.passed
+          ? `已过 ${Math.abs(h.days)} 天`
+          : `${h.days}天 ${String(h.hours).padStart(2, '0')}:${String(h.minutes).padStart(2, '0')}:${String(h.seconds).padStart(2, '0')}`;
+
+        item.innerHTML = `
+          <div class="countdown-holiday">${h.name} <span style="font-weight:400;font-size:11px;color:#999">${h.arrange}</span></div>
+          <div class="countdown-time">${timeStr}</div>
+          <div class="countdown-date">${h.date}</div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function toggleCountdown() {
+      const panel = document.getElementById('countdownPanel');
+      const btn = panel.querySelector('.countdown-minimize');
+      const list = document.getElementById('countdownList');
+      panel.classList.toggle('minimized');
+      list.classList.toggle('countdown-list-hidden');
+      btn.textContent = panel.classList.contains('minimized') ? '+' : '−';
+    }
+
+    // 初始化
+    renderCalendar();
+    updateCountdown();
+
+    // 默认定位到当前月份
+    const currentMonth = new Date().getMonth();
+    const monthContainers = document.querySelectorAll('.month-container');
+    if (monthContainers[currentMonth]) {
+      monthContainers[currentMonth].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setInterval(updateCountdown, 1000);
+  </script>
 </body>
 </html>
